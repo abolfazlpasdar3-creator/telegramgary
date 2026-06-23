@@ -152,19 +152,6 @@ def admin_reply(message):
         del pending_purchases[reply_id]
 
         save_data()
-        d = pending_purchases[reply_id]
-        user_id = d["user_id"]
-        users[user_id] = users.get(user_id, 0) - d["price"]
-        purchases.setdefault(user_id, []).append({
-            "name": d["config_name"],
-            "config": message.text,
-            "date": datetime.now().isoformat()
-        })
-        save_data()
-        bot.send_message(int(user_id), f"✅ خرید موفق!\n\n📦 {d['config_name']}\n\n🔑 کانفیگ:\n`{message.text}`", parse_mode='Markdown')
-        bot.send_message(ADMIN_ID, "✅ کانفیگ ارسال شد.")
-        del pending_purchases[reply_id]
-        save_data()
 
 # ================== خرید کانفیگ ==================
 @bot.message_handler(func=lambda m: m.text == '🛒 خرید کانفیگ')
