@@ -358,7 +358,6 @@ def edu_callback(call):
 @bot.callback_query_handler(func=lambda call: call.data.startswith('app_'))
 def app_callback(call):
     bot.send_message(call.message.chat.id, f"آموزش {call.data.split('_')[1].upper()} به زودی اضافه خواهد شد.")
-
 import os
 from groq import Groq
 from collections import defaultdict
@@ -370,25 +369,23 @@ if not groq_key or groq_key.strip() == "":
     print("❌ GROQ_API_KEY پیدا نشد!")
     client = None
 else:
-    print("✅ Groq API Key با موفقیت لود شد.")
+    print("✅ Groq API Key با موفقیت لود شد! طول کلید:", len(groq_key))
     client = Groq(api_key=groq_key)
 
-# حافظه چت هر کاربر
+# حافظه چت
 user_memory = defaultdict(list)
 
 # ================== تابع هوش مصنوعی ==================
 def get_ai_response(user_id, user_message):
     if client is None:
-        return "❌ هوش مصنوعی در حال حاضر در دسترس نیست.\nلطفاً به ادمین پیام بده."
+        return "❌ هوش مصنوعی تنظیم نشده. لطفاً ادمین رو خبر کنید."
 
     user_memory[user_id].append({"role": "user", "content": user_message})
-    
     if len(user_memory[user_id]) > 10:
         user_memory[user_id] = user_memory[user_id][-10:]
 
-    system_prompt = """تو یک پشتیبانی حرفه‌ای فروش کانفیگ V2Ray هستی.
-تمرکز روی: راهنمای اتصال اندروید (V2RayNG)، آیفون، import کانفیگ و رفع ارورهای رایج.
-جواب‌ها کوتاه، مرحله به مرحله و با ایموجی باشه."""
+    system_prompt = """تو یک پشتیبانی حرفه‌ای فروش کانفیگ V2Ray هستی. 
+تمرکز روی راهنمای اتصال اندروید و آیفون."""
 
     messages = [{"role": "system", "content": system_prompt}]
     messages.extend(user_memory[user_id])
@@ -398,42 +395,36 @@ def get_ai_response(user_id, user_message):
             messages=messages,
             model="llama-3.1-70b-versatile",
             temperature=0.7,
-            max_tokens=700,
+            max_tokens=600,
         )
         response = chat.choices[0].message.content
         user_memory[user_id].append({"role": "assistant", "content": response})
         return response
     except Exception as e:
-        print("Groq Error:", e)
-        return "❌ در حال حاضر مشکلی پیش آمده. لطفاً بعداً امتحان کن."
+        print("Groq Error:", str(e))
+        return "❌ مشکلی پیش آمد. بعداً امتحان کن."
 
-# ================== پشتیبانی (جدید) ==================
+# ================== پشتیبانی ==================
 @bot.message_handler(func=lambda m: m.text == '🆘 پشتیبانی')
 def support(message):
     markup = telebot.types.InlineKeyboardMarkup(row_width=2)
-    markup.add(telebot.types.InlineKeyboardButton("💬 چت با هوش مصنوعی", callback_data="ai_chat"))
+    markup.add(telebot.types.InlineKeyboardButton("💬 چت با AI", callback_data="ai_chat"))
     markup.add(telebot.types.InlineKeyboardButton("👨‍💼 ارسال به ادمین", callback_data="to_admin"))
-    
-    bot.send_message(message.chat.id, 
-        "برای دریافت پاسخ سریع با هوش مصنوعی چت کنید 👇\n"
-        "یا مستقیم پیامتون رو به ادمین بفرستید.", 
-        reply_markup=markup)
+    bot.send_message(message.chat.id, "انتخاب کنید:", reply_markup=markup)
 
 @bot.callback_query_handler(func=lambda call: call.data == "ai_chat")
 def start_ai_chat(call):
-    bot.send_message(call.message.chat.id, "✅ حالا سوالت رو بنویس:")
+    bot.send_message(call.message.chat.id, "✅ سوالت رو بنویس:")
     bot.register_next_step_handler(call.message, ai_chat_handler)
 
 def ai_chat_handler(message):
-    if message.text in ['🆘 پشتیبانی', '/start', '👤 موجودی من']:
-        return
     bot.send_chat_action(message.chat.id, 'typing')
     response = get_ai_response(str(message.from_user.id), message.text)
     bot.send_message(message.chat.id, response)
 
 @bot.callback_query_handler(func=lambda call: call.data == "to_admin")
 def to_admin(call):
-    bot.send_message(call.message.chat.id, "✅ پیام شما به ادمین ارسال شد. لطفاً منتظر باشید.")
+    bot.send_message(call.message.chat.id, "✅ پیام به ادمین ارسال شد.")
     bot.forward_message(ADMIN_ID, call.message.chat.id, call.message.message_id)
 # ================== ریپلای ادمین (شارژ + پشتیبانی) ==================
 @bot.message_handler(func=lambda m: m.reply_to_message and m.from_user.id == ADMIN_ID)
