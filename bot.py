@@ -339,17 +339,47 @@ def buy_config(message):
     bot.send_message(message.chat.id, "کانفیگ مورد نظر را انتخاب کنید:", reply_markup=markup)
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('buy_'))
+@bot.callback_query_handler(func=lambda call: call.data.startswith('buy_'))
 def buy_callback(call):
     key = call.data.split('_')[1]
     cfg = configs[key]
     user_id = str(call.from_user.id)
+    
     if users.get(user_id, 0) < cfg['price']:
         bot.send_message(call.message.chat.id, "❌ موجودی کافی نیست!")
         return
-    msg = bot.send_message(ADMIN_ID, f"🛒 درخواست خرید\nکاربر: {user_id}\nکانفیگ: {cfg['name']}\nقیمت: {cfg['price']:,}\n\nReply + کانفیگ")
-    pending_purchases[str(msg.message_id)] = {"user_id": user_id, "config_name": cfg['name'], "price": cfg['price']}
+    
+    # چک کردن موجودی کانفیگ
+    if not configs_pool[key]:
+        bot.send_message(call.message.chat.id, "❌ فعلاً کانفیگ این نوع موجود نیست. لطفاً بعداً امتحان کنید.")
+        bot.send_message(ADMIN_ID, f"⚠️ هشدار: استخر کانفیگ {key} خالی شد!")
+        return
+    
+    # برداشتن یک کانفیگ از استخر
+    config_text = configs_pool[key].pop(0)
+    
+    # ثبت خرید
+    purchases.setdefault(user_id, []).append({
+        "name": cfg['name'],
+        "config": config_text,
+        "date": datetime.now().isoformat(),
+        "price": cfg['price']
+    })
+    
+    users[user_id] = users.get(user_id, 0) - cfg['price']
+    
     save_data()
-    bot.send_message(call.message.chat.id, "✅ درخواست خرید ثبت شد.")
+    
+    bot.send_message(
+        call.message.chat.id,
+        f"✅ خرید موفق!\n\n📦 {cfg['name']}\n\n🔑 کانفیگ:\n`{config_text}`",
+        parse_mode='Markdown'
+    )
+    
+    bot.send_message(
+        ADMIN_ID,
+        f"🛒 خرید جدید\nکاربر: {user_id}\nنوع: {cfg['name']}\nکانفیگ ارسال شد."
+    )
 
 # ================== سرویس‌های من ==================
 @bot.message_handler(func=lambda m: m.text == '🛍️ سرویس‌های من')
