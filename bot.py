@@ -38,7 +38,6 @@ def save_data():
             "charge_requests": charge_requests,
             "support_requests": support_requests
         }, f, ensure_ascii=False, indent=2)
-
 # ================== پیام همگانی (Broadcast) ==================
 @bot.message_handler(commands=['broadcast'])
 def broadcast(message):
