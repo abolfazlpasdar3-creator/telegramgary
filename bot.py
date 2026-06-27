@@ -29,6 +29,15 @@ purchases = data.get("purchases", {})
 pending_purchases = data.get("pending_purchases", {})
 charge_requests = data.get("charge_requests", {})
 support_requests = data.get("support_requests", {})
+
+# استخر کانفیگ‌ها
+configs_pool = data.get("configs_pool", {
+    "unlimited": [],
+    "volume30": [],
+    "volume50": []
+})
+
+config_history = data.get("config_history", {})
 def save_data():
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump({
