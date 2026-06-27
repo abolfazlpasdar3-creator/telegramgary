@@ -359,25 +359,28 @@ def edu_callback(call):
 def app_callback(call):
     bot.send_message(call.message.chat.id, f"آموزش {call.data.split('_')[1].upper()} به زودی اضافه خواهد شد.")
 
-# ================== پشتیبانی ==================from groq import Groq
+import os
+from groq import Groq
 from collections import defaultdict
 
 # ================== تنظیم Groq ==================
-# ================== تنظیم Groq ==================
 groq_key = os.getenv("GROQ_API_KEY")
 
-if not groq_key:
-    print("⚠️ WARNING: GROQ_API_KEY not found in environment variables!")
+if not groq_key or groq_key.strip() == "":
+    print("❌ GROQ_API_KEY پیدا نشد!")
     client = None
 else:
+    print("✅ Groq API Key با موفقیت لود شد.")
     client = Groq(api_key=groq_key)
-    print("✅ Groq API Key loaded successfully.")
 
 # حافظه چت هر کاربر
 user_memory = defaultdict(list)
 
 # ================== تابع هوش مصنوعی ==================
 def get_ai_response(user_id, user_message):
+    if client is None:
+        return "❌ هوش مصنوعی در حال حاضر در دسترس نیست.\nلطفاً به ادمین پیام بده."
+
     user_memory[user_id].append({"role": "user", "content": user_message})
     
     if len(user_memory[user_id]) > 10:
@@ -400,8 +403,9 @@ def get_ai_response(user_id, user_message):
         response = chat.choices[0].message.content
         user_memory[user_id].append({"role": "assistant", "content": response})
         return response
-    except:
-        return "❌ هوش مصنوعی در حال حاضر در دسترس نیست.\nلطفاً بعداً امتحان کن یا به ادمین پیام بده."
+    except Exception as e:
+        print("Groq Error:", e)
+        return "❌ در حال حاضر مشکلی پیش آمده. لطفاً بعداً امتحان کن."
 
 # ================== پشتیبانی (جدید) ==================
 @bot.message_handler(func=lambda m: m.text == '🆘 پشتیبانی')
