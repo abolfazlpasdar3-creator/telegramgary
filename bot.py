@@ -119,12 +119,15 @@ def admin_callback(call):
         bot.answer_callback_query(call.id, "❌ دسترسی ندارید!")
         return
 
+    chat_id = call.message.chat.id
+
     if call.data == "admin_broadcast":
-        bot.send_message(call.message.chat.id, "📢 پیام همگانی را بنویسید:")
-        bot.register_next_step_handler_by_chat_id(call.message.chat.id, process_broadcast)
+        bot.send_message(chat_id, "📢 پیام همگانی را بنویسید:")
+        bot.register_next_step_handler_by_chat_id(chat_id, process_broadcast)
    
     elif call.data == "admin_stats":
-        show_stats(call.message)
+        fake_message = type('obj', (object,), {'chat': type('obj', (object,), {'id': chat_id})() })()
+        show_stats(fake_message)
    
     elif call.data == "admin_addconfig":
         add_config(call.message)
@@ -135,7 +138,7 @@ def admin_callback(call):
     elif call.data == "admin_delconfig":
         del_config(call.message)
     
-    bot.answer_callback_query(call.id)  # حذف حالت لود دکمه
+    bot.answer_callback_query(call.id)
 
 # ================== آمار (روزانه + هفتگی) ==================
 @bot.message_handler(func=lambda m: m.text == '📊 آمار')
