@@ -91,7 +91,6 @@ def process_broadcast(message):
 
 # ================== پنل ادمین ==================
 @bot.message_handler(commands=['admin'])
-@bot.message_handler(commands=['admin'])
 def admin_panel(message):
     if message.from_user.id != ADMIN_ID:
         bot.send_message(message.chat.id, "❌ دسترسی ندارید!")
@@ -110,8 +109,7 @@ def admin_panel(message):
         telebot.types.InlineKeyboardButton("🗑️ حذف کانفیگ", callback_data="admin_delconfig")
     )
     
-    bot.send_message(message.chat.id, "🛠️ **پنل مدیریت**", reply_markup=markup, parse_mode='Markdown')
-    @bot.callback_query_handler(func=lambda call: call.data.startswith('admin_'))
+    bot.send_message(message.chat.id, "🛠️ **پنل مدیریت**", reply_markup=markup, parse_mode='Markdown')@bot.callback_query_handler(func=lambda call: call.data.startswith('admin_'))
 def admin_callback(call):
     if call.from_user.id != ADMIN_ID:
         return
