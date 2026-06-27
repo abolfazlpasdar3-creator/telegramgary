@@ -224,6 +224,67 @@ def collect_configs(message):
     configs_pool[current_config_type].append(message.text.strip())
     bot.send_message(message.chat.id, f"✅ اضافه شد. تعداد فعلی: {len(configs_pool[current_config_type])}")
     bot.register_next_step_handler(message, collect_configs)
+    # ================== لیست و حذف کانفیگ ==================
+@bot.message_handler(commands=['listconfigs'])
+def list_configs(message):
+    if message.from_user.id != ADMIN_ID:
+        return
+    
+    text = "📋 **کانفیگ‌های موجود:**\n\n"
+    for key, pool in configs_pool.items():
+        name = {"unlimited": "نامحدود", "volume30": "۳۰ گیگ", "volume50": "۵۰ گیگ"}[key]
+        text += f"**{name}**: {len(pool)} عدد\n"
+        if pool:
+            text += "نمونه: " + pool[0][:50] + "...\n\n"
+        else:
+            text += "خالی\n\n"
+    
+    bot.send_message(message.chat.id, text, parse_mode='Markdown')
+
+
+@bot.message_handler(commands=['delconfig'])
+def del_config(message):
+    if message.from_user.id != ADMIN_ID:
+        return
+    bot.send_message(message.chat.id, "نوع کانفیگ را انتخاب کنید:\n1. unlimited\n2. volume30\n3. volume50")
+    bot.register_next_step_handler(message, process_del_type)
+
+def process_del_type(message):
+    if message.from_user.id != ADMIN_ID:
+        return
+    try:
+        choice = int(message.text.strip())
+        types = {1: "unlimited", 2: "volume30", 3: "volume50"}
+        if choice not in types:
+            bot.send_message(message.chat.id, "❌ انتخاب اشتباه!")
+            return
+        key = types[choice]
+        if not configs_pool[key]:
+            bot.send_message(message.chat.id, "این دسته خالی است!")
+            return
+        bot.send_message(message.chat.id, f"تعداد {len(configs_pool[key])} کانفیگ موجود است.\n\nبرای حذف همه بنویس `all`\nیا شماره کانفیگ را بنویس (از ۱ شروع می‌شود)")
+        bot.register_next_step_handler(message, lambda m: do_delete(m, key))
+    except:
+        bot.send_message(message.chat.id, "❌ عدد وارد کنید!")
+
+def do_delete(message, key):
+    if message.from_user.id != ADMIN_ID:
+        return
+    if message.text.lower() == 'all':
+        count = len(configs_pool[key])
+        configs_pool[key].clear()
+        bot.send_message(message.chat.id, f"✅ همه {count} کانفیگ حذف شد.")
+    else:
+        try:
+            idx = int(message.text) - 1
+            if 0 <= idx < len(configs_pool[key]):
+                removed = configs_pool[key].pop(idx)
+                bot.send_message(message.chat.id, f"✅ کانفیگ حذف شد:\n{removed[:100]}...")
+            else:
+                bot.send_message(message.chat.id, "❌ شماره اشتباه!")
+        except:
+            bot.send_message(message.chat.id, "❌ ورودی اشتباه!")
+    save_data()
 # ================== منوی اصلی ==================
 @bot.message_handler(commands=['start'])
 def start(message):
