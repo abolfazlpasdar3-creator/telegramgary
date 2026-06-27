@@ -36,8 +36,18 @@ def save_data():
             "purchases": purchases,
             "pending_purchases": pending_purchases,
             "charge_requests": charge_requests,
-            "support_requests": support_requests
+            "support_requests": support_requests,
+            "configs_pool": configs_pool,
+            "config_history": config_history
         }, f, ensure_ascii=False, indent=2)
+        # ================== استخر کانفیگ‌ها ==================
+configs_pool = data.get("configs_pool", {
+    "unlimited": [],
+    "volume30": [],
+    "volume50": []
+})
+
+config_history = data.get("config_history", {})  # جلوگیری از ارسال تکراری
 # ================== پیام همگانی (Broadcast) ==================
 @bot.message_handler(commands=['broadcast'])
 def broadcast(message):
