@@ -95,7 +95,7 @@ def admin_panel(message):
     if message.from_user.id != ADMIN_ID:
         bot.send_message(message.chat.id, "❌ دسترسی ندارید!")
         return
-    
+   
     markup = telebot.types.InlineKeyboardMarkup(row_width=2)
     markup.add(
         telebot.types.InlineKeyboardButton("📢 پیام همگانی", callback_data="admin_broadcast"),
@@ -108,27 +108,34 @@ def admin_panel(message):
     markup.add(
         telebot.types.InlineKeyboardButton("🗑️ حذف کانفیگ", callback_data="admin_delconfig")
     )
-    
-    bot.send_message(message.chat.id, "🛠️ **پنل مدیریت**", reply_markup=markup, parse_mode='Markdown')@bot.callback_query_handler(func=lambda call: call.data.startswith('admin_'))
+   
+    bot.send_message(message.chat.id, "🛠️ **پنل مدیریت**", reply_markup=markup, parse_mode='Markdown')
+
+
+# ================== هندلر دکمه‌های پنل ادمین ==================
+@bot.callback_query_handler(func=lambda call: call.data.startswith('admin_'))
 def admin_callback(call):
     if call.from_user.id != ADMIN_ID:
+        bot.answer_callback_query(call.id, "❌ دسترسی ندارید!")
         return
-    
+
     if call.data == "admin_broadcast":
         bot.send_message(call.message.chat.id, "📢 پیام همگانی را بنویسید:")
         bot.register_next_step_handler_by_chat_id(call.message.chat.id, process_broadcast)
-    
+   
     elif call.data == "admin_stats":
-        show_stats(call.message)  # تابع آمار
-    
+        show_stats(call.message)
+   
     elif call.data == "admin_addconfig":
         add_config(call.message)
-    
+   
     elif call.data == "admin_listconfigs":
         list_configs(call.message)
-    
+   
     elif call.data == "admin_delconfig":
         del_config(call.message)
+    
+    bot.answer_callback_query(call.id)  # حذف حالت لود دکمه
 
 # ================== آمار (روزانه + هفتگی) ==================
 @bot.message_handler(func=lambda m: m.text == '📊 آمار')
