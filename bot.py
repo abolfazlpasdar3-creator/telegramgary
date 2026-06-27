@@ -76,11 +76,11 @@ def admin_panel(message):
     if message.from_user.id != ADMIN_ID:
         bot.send_message(message.chat.id, "❌ دسترسی ندارید!")
         return
-   
+  
     markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
     markup.add('📢 پیام همگانی', '📊 آمار')
     markup.add('🔙 بازگشت به منو اصلی')
-   
+  
     bot.send_message(message.chat.id, "🛠️ پنل ادمین:", reply_markup=markup)
 
 
@@ -88,6 +88,79 @@ def admin_panel(message):
 def handle_broadcast_button(message):
     if message.from_user.id == ADMIN_ID:
         broadcast(message)
+
+
+# ================== آمار (روزانه + هفتگی) ==================
+@bot.message_handler(func=lambda m: m.text == '📊 آمار')
+def show_stats(message):
+    if message.from_user.id != ADMIN_ID:
+        return
+
+    total_users = len(users)
+    total_balance = sum(users.values())
+    
+    today = datetime.now().date()
+    week_ago = today - timedelta(days=7)
+    
+    daily_sales = {"unlimited": 0, "volume30": 0, "volume50": 0}
+    weekly_sales = {"unlimited": 0, "volume30": 0, "volume50": 0}
+    daily_revenue = 0
+    weekly_revenue = 0
+
+    for user_purchases in purchases.values():
+        for p in user_purchases:
+            if not isinstance(p, dict) or 'date' not in p:
+                continue
+                
+            try:
+                sale_date = datetime.fromisoformat(p['date']).date()
+                if "نامحدود" in p.get('name', ''):
+                    price = 299000
+                elif "۳۰ گیگ" in p.get('name', ''):
+                    price = 240000
+                elif "۵۰ گیگ" in p.get('name', ''):
+                    price = 400000
+                else:
+                    price = 0
+                
+                if sale_date == today:
+                    daily_revenue += price
+                    if "نامحدود" in p.get('name', ''):
+                        daily_sales["unlimited"] += 1
+                    elif "۳۰ گیگ" in p.get('name', ''):
+                        daily_sales["volume30"] += 1
+                    elif "۵۰ گیگ" in p.get('name', ''):
+                        daily_sales["volume50"] += 1
+                
+                if sale_date >= week_ago:
+                    weekly_revenue += price
+                    if "نامحدود" in p.get('name', ''):
+                        weekly_sales["unlimited"] += 1
+                    elif "۳۰ گیگ" in p.get('name', ''):
+                        weekly_sales["volume30"] += 1
+                    elif "۵۰ گیگ" in p.get('name', ''):
+                        weekly_sales["volume50"] += 1
+            except:
+                continue
+
+    text = f"""📊 **آمار ربات**
+
+👥 تعداد کل کاربران: {total_users:,}
+💰 مجموع شارژ کیف پول‌ها: {total_balance:,} تومان
+
+📅 **امروز**
+   • نامحدود: {daily_sales['unlimited']} عدد
+   • ۳۰ گیگ: {daily_sales['volume30']} عدد
+   • ۵۰ گیگ: {daily_sales['volume50']} عدد
+   💵 درآمد امروز: {daily_revenue:,} تومان
+
+📆 **۷ روز اخیر**
+   • نامحدود: {weekly_sales['unlimited']} عدد
+   • ۳۰ گیگ: {weekly_sales['volume30']} عدد
+   • ۵۰ گیگ: {weekly_sales['volume50']} عدد
+   💵 درآمد هفتگی: {weekly_revenue:,} تومان"""
+
+    bot.send_message(message.chat.id, text, parse_mode='Markdown')
 configs = {
     "unlimited": {"name": "کانفیگ نامحدود", "price": 299000, "data": "v2ray://نامحدود-اینجا-بگذار"},
     "volume30": {"name": "کانفیگ حجمی ۳۰ گیگ", "price": 240000, "data": "v2ray://۳۰-گیگ-اینجا-بگذار"},
