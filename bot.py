@@ -91,23 +91,27 @@ def process_broadcast(message):
 
 # ================== پنل ادمین ==================
 @bot.message_handler(commands=['admin'])
+@bot.message_handler(commands=['admin'])
 def admin_panel(message):
     if message.from_user.id != ADMIN_ID:
         bot.send_message(message.chat.id, "❌ دسترسی ندارید!")
         return
-  
-    markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
-    markup.add('📢 پیام همگانی', '📊 آمار')
-    markup.add('🔙 بازگشت به منو اصلی')
-  
-    bot.send_message(message.chat.id, "🛠️ پنل ادمین:", reply_markup=markup)
-
-
-@bot.message_handler(func=lambda m: m.text == '📢 پیام همگانی')
-def handle_broadcast_button(message):
-    if message.from_user.id == ADMIN_ID:
-        broadcast(message)
-@bot.callback_query_handler(func=lambda call: call.data.startswith('admin_'))
+    
+    markup = telebot.types.InlineKeyboardMarkup(row_width=2)
+    markup.add(
+        telebot.types.InlineKeyboardButton("📢 پیام همگانی", callback_data="admin_broadcast"),
+        telebot.types.InlineKeyboardButton("📊 آمار", callback_data="admin_stats")
+    )
+    markup.add(
+        telebot.types.InlineKeyboardButton("➕ اضافه کردن کانفیگ", callback_data="admin_addconfig"),
+        telebot.types.InlineKeyboardButton("📋 لیست کانفیگ‌ها", callback_data="admin_listconfigs")
+    )
+    markup.add(
+        telebot.types.InlineKeyboardButton("🗑️ حذف کانفیگ", callback_data="admin_delconfig")
+    )
+    
+    bot.send_message(message.chat.id, "🛠️ **پنل مدیریت**", reply_markup=markup, parse_mode='Markdown')
+    @bot.callback_query_handler(func=lambda call: call.data.startswith('admin_'))
 def admin_callback(call):
     if call.from_user.id != ADMIN_ID:
         return
