@@ -111,7 +111,7 @@ def admin_panel(message):
     bot.send_message(message.chat.id, text, parse_mode='Markdown')
 
 # ================== آمار (روزانه + هفتگی) ==================
-@bot.message_handler(func=lambda m: m.text == '📊 آمار')
+@bot.message_handler(commands=['stats'])
 def show_stats(message):
     if message.from_user.id != ADMIN_ID:
         return
@@ -181,13 +181,6 @@ def show_stats(message):
    💵 درآمد هفتگی: {weekly_revenue:,} تومان"""
 
     bot.send_message(message.chat.id, text, parse_mode='Markdown')
-configs = {
-    "unlimited": {"name": "کانفیگ نامحدود", "price": 299000, "data": "v2ray://نامحدود-اینجا-بگذار"},
-    "volume30": {"name": "کانفیگ حجمی ۳۰ گیگ", "price": 240000, "data": "v2ray://۳۰-گیگ-اینجا-بگذار"},
-    "volume50": {"name": "کانفیگ حجمی ۵۰ گیگ", "price": 400000, "data": "v2ray://۵۰-گیگ-اینجا-بگذار"}
-}
-
-CARD_NUMBER = "5022291344612641"
 # ================== مدیریت استخر کانفیگ توسط ادمین ==================
 @bot.message_handler(commands=['addconfig'])
 def add_config(message):
