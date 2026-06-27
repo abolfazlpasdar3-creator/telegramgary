@@ -357,18 +357,70 @@ def edu_callback(call):
 def app_callback(call):
     bot.send_message(call.message.chat.id, f"آموزش {call.data.split('_')[1].upper()} به زودی اضافه خواهد شد.")
 
-# ================== پشتیبانی ==================
+# ================== پشتیبانی ==================from groq import Groq
+from collections import defaultdict
+
+# ================== تنظیم Groq ==================
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+
+# حافظه چت هر کاربر
+user_memory = defaultdict(list)
+
+# ================== تابع هوش مصنوعی ==================
+def get_ai_response(user_id, user_message):
+    user_memory[user_id].append({"role": "user", "content": user_message})
+    
+    if len(user_memory[user_id]) > 10:
+        user_memory[user_id] = user_memory[user_id][-10:]
+
+    system_prompt = """تو یک پشتیبانی حرفه‌ای فروش کانفیگ V2Ray هستی.
+تمرکز روی: راهنمای اتصال اندروید (V2RayNG)، آیفون، import کانفیگ و رفع ارورهای رایج.
+جواب‌ها کوتاه، مرحله به مرحله و با ایموجی باشه."""
+
+    messages = [{"role": "system", "content": system_prompt}]
+    messages.extend(user_memory[user_id])
+
+    try:
+        chat = client.chat.completions.create(
+            messages=messages,
+            model="llama-3.1-70b-versatile",
+            temperature=0.7,
+            max_tokens=700,
+        )
+        response = chat.choices[0].message.content
+        user_memory[user_id].append({"role": "assistant", "content": response})
+        return response
+    except:
+        return "❌ هوش مصنوعی در حال حاضر در دسترس نیست.\nلطفاً بعداً امتحان کن یا به ادمین پیام بده."
+
+# ================== پشتیبانی (جدید) ==================
 @bot.message_handler(func=lambda m: m.text == '🆘 پشتیبانی')
 def support(message):
-    bot.send_message(message.chat.id, "لطفاً مشکل خود را بنویسید:")
-    bot.register_next_step_handler(message, send_support_message)
+    markup = telebot.types.InlineKeyboardMarkup(row_width=2)
+    markup.add(telebot.types.InlineKeyboardButton("💬 چت با هوش مصنوعی", callback_data="ai_chat"))
+    markup.add(telebot.types.InlineKeyboardButton("👨‍💼 ارسال به ادمین", callback_data="to_admin"))
+    
+    bot.send_message(message.chat.id, 
+        "برای دریافت پاسخ سریع با هوش مصنوعی چت کنید 👇\n"
+        "یا مستقیم پیامتون رو به ادمین بفرستید.", 
+        reply_markup=markup)
 
-def send_support_message(message):
-    forwarded = bot.forward_message(ADMIN_ID, message.chat.id, message.message_id)
-    support_requests[str(forwarded.message_id)] = str(message.from_user.id)
-    save_data()
-    bot.send_message(message.chat.id, "✅ پیام شما برای پشتیبانی ارسال شد.")
+@bot.callback_query_handler(func=lambda call: call.data == "ai_chat")
+def start_ai_chat(call):
+    bot.send_message(call.message.chat.id, "✅ حالا سوالت رو بنویس:")
+    bot.register_next_step_handler(call.message, ai_chat_handler)
 
+def ai_chat_handler(message):
+    if message.text in ['🆘 پشتیبانی', '/start', '👤 موجودی من']:
+        return
+    bot.send_chat_action(message.chat.id, 'typing')
+    response = get_ai_response(str(message.from_user.id), message.text)
+    bot.send_message(message.chat.id, response)
+
+@bot.callback_query_handler(func=lambda call: call.data == "to_admin")
+def to_admin(call):
+    bot.send_message(call.message.chat.id, "✅ پیام شما به ادمین ارسال شد. لطفاً منتظر باشید.")
+    bot.forward_message(ADMIN_ID, call.message.chat.id, call.message.message_id)
 # ================== ریپلای ادمین (شارژ + پشتیبانی) ==================
 @bot.message_handler(func=lambda m: m.reply_to_message and m.from_user.id == ADMIN_ID)
 def admin_reply(message):
