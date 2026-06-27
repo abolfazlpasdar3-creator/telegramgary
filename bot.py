@@ -107,7 +107,26 @@ def admin_panel(message):
 def handle_broadcast_button(message):
     if message.from_user.id == ADMIN_ID:
         broadcast(message)
-
+@bot.callback_query_handler(func=lambda call: call.data.startswith('admin_'))
+def admin_callback(call):
+    if call.from_user.id != ADMIN_ID:
+        return
+    
+    if call.data == "admin_broadcast":
+        bot.send_message(call.message.chat.id, "📢 پیام همگانی را بنویسید:")
+        bot.register_next_step_handler_by_chat_id(call.message.chat.id, process_broadcast)
+    
+    elif call.data == "admin_stats":
+        show_stats(call.message)  # تابع آمار
+    
+    elif call.data == "admin_addconfig":
+        add_config(call.message)
+    
+    elif call.data == "admin_listconfigs":
+        list_configs(call.message)
+    
+    elif call.data == "admin_delconfig":
+        del_config(call.message)
 
 # ================== آمار (روزانه + هفتگی) ==================
 @bot.message_handler(func=lambda m: m.text == '📊 آمار')
