@@ -39,6 +39,48 @@ def save_data():
             "support_requests": support_requests
         }, f, ensure_ascii=False, indent=2)
 
+# ================== پیام همگانی (Broadcast) ==================
+@bot.message_handler(commands=['broadcast'])
+def broadcast(message):
+    if message.from_user.id != ADMIN_ID:
+        return
+    
+    bot.send_message(message.chat.id, "📢 پیام همگانی را ارسال کنید:")
+    bot.register_next_step_handler(message, process_broadcast)
+
+def process_broadcast(message):
+    if message.from_user.id != ADMIN_ID:
+        return
+    
+    success = 0
+    failed = 0
+    
+    for user_id in list(users.keys()):
+        try:
+            bot.send_message(int(user_id), message.text, parse_mode='Markdown')
+            success += 1
+        except:
+            failed += 1
+    
+    bot.send_message(
+        ADMIN_ID, 
+        f"✅ پیام همگانی ارسال شد!\n\n"
+        f"✅ موفق: {success}\n"
+        f"❌ ناموفق: {failed}\n"
+        f"👥 کل کاربران: {len(users)}"
+    )
+    @bot.message_handler(commands=['admin'])
+def admin_panel(message):
+    if message.from_user.id != ADMIN_ID:
+        bot.send_message(message.chat.id, "❌ دسترسی ندارید!")
+        return
+    
+    markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
+    markup.add('📢 پیام همگانی', '📊 آمار')
+    markup.add('🔙 بازگشت به منو اصلی')
+    
+    bot.send_message(message.chat.id, "🛠️ پنل ادمین:", reply_markup=markup)
+    
 configs = {
     "unlimited": {"name": "کانفیگ نامحدود", "price": 299000, "data": "v2ray://نامحدود-اینجا-بگذار"},
     "volume30": {"name": "کانفیگ حجمی ۳۰ گیگ", "price": 240000, "data": "v2ray://۳۰-گیگ-اینجا-بگذار"},
@@ -261,4 +303,8 @@ def send_support_message(message):
         "✅ پیام شما برای پشتیبانی ارسال شد."
     )
 print("✅ ربات اجرا شد...")
+@bot.message_handler(func=lambda m: m.text == '📢 پیام همگانی')
+def handle_broadcast_button(message):
+    if message.from_user.id == ADMIN_ID:
+        broadcast(message)
 bot.infinity_polling(skip_pending=True)
