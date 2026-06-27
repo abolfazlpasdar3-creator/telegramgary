@@ -363,7 +363,15 @@ def app_callback(call):
 from collections import defaultdict
 
 # ================== تنظیم Groq ==================
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+# ================== تنظیم Groq ==================
+groq_key = os.getenv("GROQ_API_KEY")
+
+if not groq_key:
+    print("⚠️ WARNING: GROQ_API_KEY not found in environment variables!")
+    client = None
+else:
+    client = Groq(api_key=groq_key)
+    print("✅ Groq API Key loaded successfully.")
 
 # حافظه چت هر کاربر
 user_memory = defaultdict(list)
