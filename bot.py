@@ -187,7 +187,43 @@ configs = {
 }
 
 CARD_NUMBER = "5022291344612641"
+# ================== مدیریت استخر کانفیگ توسط ادمین ==================
+@bot.message_handler(commands=['addconfig'])
+def add_config(message):
+    if message.from_user.id != ADMIN_ID:
+        return
+    bot.send_message(message.chat.id, "نوع کانفیگ را انتخاب کنید:\n\n1. unlimited\n2. volume30\n3. volume50\n\nمثال: `1`")
+    bot.register_next_step_handler(message, process_config_type)
 
+def process_config_type(message):
+    if message.from_user.id != ADMIN_ID:
+        return
+    try:
+        choice = int(message.text.strip())
+        types = {1: "unlimited", 2: "volume30", 3: "volume50"}
+        if choice not in types:
+            bot.send_message(message.chat.id, "❌ انتخاب اشتباه!")
+            return
+        global current_config_type
+        current_config_type = types[choice]
+        bot.send_message(message.chat.id, f"حالا کانفیگ(ها) را ارسال کنید (هر خط یکی):\n\nبرای پایان /done")
+        bot.register_next_step_handler(message, collect_configs)
+    except:
+        bot.send_message(message.chat.id, "❌ لطفاً عدد وارد کنید!")
+
+current_config_type = None
+
+def collect_configs(message):
+    if message.from_user.id != ADMIN_ID:
+        return
+    if message.text == '/done':
+        bot.send_message(message.chat.id, f"✅ {len(configs_pool[current_config_type])} کانفیگ برای {current_config_type} ذخیره شد.")
+        save_data()
+        return
+    
+    configs_pool[current_config_type].append(message.text.strip())
+    bot.send_message(message.chat.id, f"✅ اضافه شد. تعداد فعلی: {len(configs_pool[current_config_type])}")
+    bot.register_next_step_handler(message, collect_configs)
 # ================== منوی اصلی ==================
 @bot.message_handler(commands=['start'])
 def start(message):
