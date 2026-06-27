@@ -3,6 +3,8 @@ import json
 import os
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
+from groq import Groq
+from collections import defaultdict
 
 load_dotenv()
 
