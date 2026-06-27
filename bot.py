@@ -95,50 +95,20 @@ def admin_panel(message):
     if message.from_user.id != ADMIN_ID:
         bot.send_message(message.chat.id, "❌ دسترسی ندارید!")
         return
-   
-    markup = telebot.types.InlineKeyboardMarkup(row_width=2)
-    markup.add(
-        telebot.types.InlineKeyboardButton("📢 پیام همگانی", callback_data="admin_broadcast"),
-        telebot.types.InlineKeyboardButton("📊 آمار", callback_data="admin_stats")
-    )
-    markup.add(
-        telebot.types.InlineKeyboardButton("➕ اضافه کردن کانفیگ", callback_data="admin_addconfig"),
-        telebot.types.InlineKeyboardButton("📋 لیست کانفیگ‌ها", callback_data="admin_listconfigs")
-    )
-    markup.add(
-        telebot.types.InlineKeyboardButton("🗑️ حذف کانفیگ", callback_data="admin_delconfig")
-    )
-   
-    bot.send_message(message.chat.id, "🛠️ **پنل مدیریت**", reply_markup=markup, parse_mode='Markdown')
-
-
-# ================== هندلر دکمه‌های پنل ادمین ==================
-@bot.callback_query_handler(func=lambda call: call.data.startswith('admin_'))
-def admin_callback(call):
-    if call.from_user.id != ADMIN_ID:
-        bot.answer_callback_query(call.id, "❌ دسترسی ندارید!")
-        return
-
-    chat_id = call.message.chat.id
-
-    if call.data == "admin_broadcast":
-        bot.send_message(chat_id, "📢 پیام همگانی را بنویسید:")
-        bot.register_next_step_handler_by_chat_id(chat_id, process_broadcast)
-   
-    elif call.data == "admin_stats":
-        fake_message = type('obj', (object,), {'chat': type('obj', (object,), {'id': chat_id})() })()
-        show_stats(fake_message)
-   
-    elif call.data == "admin_addconfig":
-        add_config(call.message)
-   
-    elif call.data == "admin_listconfigs":
-        list_configs(call.message)
-   
-    elif call.data == "admin_delconfig":
-        del_config(call.message)
     
-    bot.answer_callback_query(call.id)
+    text = """🛠️ **پنل مدیریت**
+
+دستورات موجود:
+
+/addconfig → اضافه کردن کانفیگ جدید
+/listconfigs → نمایش لیست کانفیگ‌های موجود
+/delconfig → حذف کانفیگ
+
+/broadcast → پیام همگانی
+/stats → آمار روزانه و هفتگی
+"""
+
+    bot.send_message(message.chat.id, text, parse_mode='Markdown')
 
 # ================== آمار (روزانه + هفتگی) ==================
 @bot.message_handler(func=lambda m: m.text == '📊 آمار')
