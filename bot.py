@@ -404,12 +404,11 @@ def edu_callback(call):
 def app_callback(call):
     bot.send_message(call.message.chat.id, f"آموزش {call.data.split('_')[1].upper()} به زودی اضافه خواهد شد.")
 
-# ================== Groq (تست مستقیم) ==================
 # ================== Groq ==================
 from groq import Groq
 from collections import defaultdict
 
-client = Groq(api_key="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")  # کلید خودت
+client = Groq(api_key="کلید_خودت_را_اینجا_بچسبون")
 
 user_memory = defaultdict(list)
 
@@ -424,20 +423,18 @@ def get_ai_response(user_id, user_message):
     messages.extend(user_memory[user_id])
 
     try:
-        print("Sending request to Groq...")  # لاگ
         chat = client.chat.completions.create(
             messages=messages,
-            model="llama-3.1-70b-versatile",
+            model="llama-3.3-70b-versatile",   # مدل جدید
             temperature=0.7,
-            max_tokens=600,
+            max_tokens=700,
         )
         response = chat.choices[0].message.content
-        print("Groq response received.")  # لاگ
         user_memory[user_id].append({"role": "assistant", "content": response})
         return response
     except Exception as e:
-        print("Groq Error:", str(e))  # لاگ مهم
-        return f"❌ خطا: {str(e)[:100]}"
+        print("Groq Error:", str(e))
+        return "❌ خطا در اتصال به هوش مصنوعی."
 # پشتیبانی
 @bot.message_handler(func=lambda m: m.text == '🆘 پشتیبانی')
 def support(message):
