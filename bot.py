@@ -404,27 +404,15 @@ def edu_callback(call):
 def app_callback(call):
     bot.send_message(call.message.chat.id, f"آموزش {call.data.split('_')[1].upper()} به زودی اضافه خواهد شد.")
 
-# ================== Groq + پشتیبانی ==================
-import os
+# ================== Groq (تست مستقیم) ==================
 from groq import Groq
 from collections import defaultdict
 
-# تنظیم Groq
-groq_key = os.getenv("GROQ_API_KEY")
-
-if not groq_key or groq_key.strip() == "":
-    print("❌ GROQ_API_KEY پیدا نشد!")
-    client = None
-else:
-    print("✅ Groq API Key لود شد.")
-    client = Groq(api_key=groq_key)
+client = Groq(api_key="gsk_iz6pYMkmsG8yg5QKdhlWGdyb3FYMfLqZ01meJvuZp5QprS0akB")  # ← کلید خودت رو اینجا بچسبون
 
 user_memory = defaultdict(list)
 
 def get_ai_response(user_id, user_message):
-    if client is None:
-        return "❌ هوش مصنوعی تنظیم نشده. ادمین رو خبر کنید."
-
     user_memory[user_id].append({"role": "user", "content": user_message})
     if len(user_memory[user_id]) > 10:
         user_memory[user_id] = user_memory[user_id][-10:]
@@ -445,9 +433,9 @@ def get_ai_response(user_id, user_message):
         response = chat.choices[0].message.content
         user_memory[user_id].append({"role": "assistant", "content": response})
         return response
-    except:
-        return "❌ هوش مصنوعی در دسترس نیست. بعدا امتحان کن."
-
+    except Exception as e:
+        print("Groq Error:", str(e))
+        return "❌ خطا در اتصال به هوش مصنوعی."
 # پشتیبانی
 @bot.message_handler(func=lambda m: m.text == '🆘 پشتیبانی')
 def support(message):
