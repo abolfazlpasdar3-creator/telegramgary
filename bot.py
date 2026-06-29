@@ -134,10 +134,12 @@ def process_broadcast(message):
     bot.send_message(ADMIN_ID, f"✅ پیام همگانی ارسال شد!\n\nموفق: {success}\nناموفق: {failed}\nکل کاربران: {len(users)}")
 
 # ================== مدیریت کانفیگ‌ها ==================
+current_config_type = None   # ← این خط خیلی مهم است
+
 @bot.message_handler(commands=['addconfig'])
 def add_config(message):
     if message.from_user.id != ADMIN_ID: return
-    bot.send_message(message.chat.id, "نوع کانفیگ را انتخاب کنید:\n\n1. unlimited\n2. volume30\n3. volume50\n\nمثال: 1")
+    bot.send_message(message.chat.id, "نوع کانفیگ را انتخاب کنید:\n1. unlimited\n2. volume30\n3. volume50")
     bot.register_next_step_handler(message, process_config_type)
 
 def process_config_type(message):
@@ -150,12 +152,10 @@ def process_config_type(message):
             return
         global current_config_type
         current_config_type = types[choice]
-        bot.send_message(message.chat.id, f"حالا کانفیگ(ها) را ارسال کنید (هر خط یکی):\n\nبرای پایان /done")
+        bot.send_message(message.chat.id, f"حالا کانفیگ(ها) را ارسال کنید (هر خط یکی):\nبرای پایان /done")
         bot.register_next_step_handler(message, collect_configs)
     except:
-        bot.send_message(message.chat.id, "❌ لطفاً عدد وارد کنید!")
-
-current_config_type = None
+        bot.send_message(message.chat.id, "❌ عدد وارد کنید!")
 
 def collect_configs(message):
     global current_config_type
@@ -203,6 +203,24 @@ def process_del_type(message):
         bot.register_next_step_handler(message, lambda m: do_delete(m, key))
     except:
         bot.send_message(message.chat.id, "❌ عدد وارد کنید!")
+
+def do_delete(message, key):
+    if message.from_user.id != ADMIN_ID: return
+    if message.text.lower() == 'all':
+        count = len(configs_pool[key])
+        configs_pool[key].clear()
+        bot.send_message(message.chat.id, f"✅ همه {count} کانفیگ حذف شد.")
+    else:
+        try:
+            idx = int(message.text) - 1
+            if 0 <= idx < len(configs_pool[key]):
+                configs_pool[key].pop(idx)
+                bot.send_message(message.chat.id, "✅ کانفیگ حذف شد.")
+            else:
+                bot.send_message(message.chat.id, "❌ شماره اشتباه!")
+        except:
+            bot.send_message(message.chat.id, "❌ ورودی اشتباه!")
+    save_data()
 
 def do_delete(message, key):
     if message.from_user.id != ADMIN_ID: return
