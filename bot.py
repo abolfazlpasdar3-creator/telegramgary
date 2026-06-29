@@ -472,10 +472,11 @@ def start_to_admin(call):
     bot.register_next_step_handler(call.message, to_admin_handler)
 
 def to_admin_handler(message):
-    bot.forward_message(ADMIN_ID, message.chat.id, message.message_id)
+    forwarded = bot.forward_message(ADMIN_ID, message.chat.id, message.message_id)
+    support_requests[str(forwarded.message_id)] = str(message.from_user.id)
+    save_data()
     bot.send_message(message.chat.id, "✅ پیام شما به ادمین ارسال شد.")
 
-# ================== ریپلای ادمین (شارژ + پشتیبانی) ==================
 # ================== ریپلای ادمین (شارژ + پشتیبانی) ==================
 @bot.message_handler(func=lambda m: m.reply_to_message and m.from_user.id == ADMIN_ID)
 def admin_reply(message):
@@ -495,13 +496,13 @@ def admin_reply(message):
             save_data()
         return
 
-    # پاسخ پشتیبانی
+    # پاسخ به پشتیبانی
     if reply_id in support_requests:
         user_id = support_requests[reply_id]
         bot.send_message(int(user_id), f"📩 پاسخ پشتیبانی:\n\n{message.text}")
         support_requests.pop(reply_id, None)
         save_data()
-        bot.send_message(ADMIN_ID, "✅ پاسخ ارسال شد.")
+        bot.send_message(ADMIN_ID, "✅ پاسخ به کاربر ارسال شد.")
         return
 
 print("✅ ربات با موفقیت اجرا شد...")
