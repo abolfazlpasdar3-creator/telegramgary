@@ -221,6 +221,33 @@ def do_delete(message, key):
         except:
             bot.send_message(message.chat.id, "❌ ورودی اشتباه!")
     save_data()
+    # ================== ریپلای ادمین (برای پشتیبانی و شارژ) ==================
+@bot.message_handler(func=lambda m: m.reply_to_message and m.from_user.id == ADMIN_ID)
+def admin_reply(message):
+    text = message.text.strip()
+    reply_id = str(message.reply_to_message.message_id)
+
+    # شارژ کیف پول
+    if text.isdigit():
+        amount = int(text)
+        user_id = charge_requests.get(reply_id)
+        if user_id:
+            users[user_id] = users.get(user_id, 0) + amount
+            save_data()
+            bot.send_message(int(user_id), f"✅ کیف پول شارژ شد!\n💰 {amount:,} تومان\nموجودی فعلی: {users[user_id]:,} تومان")
+            bot.send_message(ADMIN_ID, f"✅ شارژ {amount:,} تومان انجام شد.")
+            charge_requests.pop(reply_id, None)
+            save_data()
+        return
+
+    # پاسخ به پیام پشتیبانی
+    if reply_id in support_requests:
+        user_id = support_requests[reply_id]
+        bot.send_message(int(user_id), f"📩 پاسخ پشتیبانی:\n\n{message.text}")
+        support_requests.pop(reply_id, None)
+        save_data()
+        bot.send_message(ADMIN_ID, "✅ پاسخ به کاربر ارسال شد.")
+        return
 
 def do_delete(message, key):
     if message.from_user.id != ADMIN_ID: return
