@@ -405,10 +405,11 @@ def app_callback(call):
     bot.send_message(call.message.chat.id, f"آموزش {call.data.split('_')[1].upper()} به زودی اضافه خواهد شد.")
 
 # ================== Groq (تست مستقیم) ==================
+# ================== Groq ==================
 from groq import Groq
 from collections import defaultdict
 
-client = Groq(api_key="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")  #
+client = Groq(api_key="gsk_iz6pYMkmsG8yg5QKdhlWGdyb3FYMfLqZ01meJvuZp5QprS0akB")  # کلید خودت
 
 user_memory = defaultdict(list)
 
@@ -417,25 +418,26 @@ def get_ai_response(user_id, user_message):
     if len(user_memory[user_id]) > 10:
         user_memory[user_id] = user_memory[user_id][-10:]
 
-    system_prompt = """تو یک پشتیبانی حرفه‌ای فروش کانفیگ V2Ray هستی.
-تمرکز روی راهنمای اتصال اندروید و آیفون."""
+    system_prompt = """تو یک پشتیبانی حرفه‌ای فروش کانفیگ V2Ray هستی."""
 
     messages = [{"role": "system", "content": system_prompt}]
     messages.extend(user_memory[user_id])
 
     try:
+        print("Sending request to Groq...")  # لاگ
         chat = client.chat.completions.create(
             messages=messages,
             model="llama-3.1-70b-versatile",
             temperature=0.7,
-            max_tokens=700,
+            max_tokens=600,
         )
         response = chat.choices[0].message.content
+        print("Groq response received.")  # لاگ
         user_memory[user_id].append({"role": "assistant", "content": response})
         return response
     except Exception as e:
-        print("Groq Error:", str(e))
-        return "❌ خطا در اتصال به هوش مصنوعی."
+        print("Groq Error:", str(e))  # لاگ مهم
+        return f"❌ خطا: {str(e)[:100]}"
 # پشتیبانی
 @bot.message_handler(func=lambda m: m.text == '🆘 پشتیبانی')
 def support(message):
