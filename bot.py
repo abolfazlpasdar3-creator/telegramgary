@@ -408,7 +408,7 @@ def app_callback(call):
 from groq import Groq
 from collections import defaultdict
 
-client = Groq(api_key="8871062070:AAGJ6XCI4Wh0Y8TMYm3D7Mch86gEInAotW8")  #
+client = Groq(api_key="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")  #
 
 user_memory = defaultdict(list)
 
