@@ -409,7 +409,7 @@ def app_callback(call):
 from groq import Groq
 from collections import defaultdict
 
-client = Groq(api_key="gsk_iz6pYMkmsG8yg5QKdhlWGdyb3FYMfLqZ01meJvuZp5QprS0akB")  # کلید خودت
+client = Groq(api_key="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")  # کلید خودت
 
 user_memory = defaultdict(list)
 
